@@ -3,11 +3,13 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-const app = express()
-
+const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json()); // ВАЖНО: это должно быть ДО любых роутов, чтобы req.body работало
+
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
 
 const DB_URI = process.env.DB_URI;
 
