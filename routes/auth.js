@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
+const JWT_SECRET = 'my_super_secret_key_12345';
 
 router.post('/login', async (req, res) => {
     try {
@@ -20,9 +22,16 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Неверный пароль' });
         }
 
-        // В будущем тут можно генерировать JWT токен
+        // Генерируем JWT токен
+        const token = jwt.sign(
+            { userId: user._id, email: user.email }, // Payload
+            JWT_SECRET, // Наш секретный ключ
+            { expiresIn: '1h' } // Токен будет жить 1 час
+        );
+
         res.status(200).json({
             message: 'Успешный вход',
+            token, // Отдаем токен клиенту
             user: {
                 _id: user._id,
                 email: user.email
@@ -49,8 +58,16 @@ router.post('/register', async (req, res) => {
         });
         await newUser.save();
 
+        // Также генерируем токен и при регистрации, чтобы сразу войти
+        const token = jwt.sign(
+            { userId: newUser._id, email: newUser.email },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
         res.status(201).json({
             message: 'Пользователь успешно зарегистрирован',
+            token, // Отдаем токен клиенту
             user: {
                 _id: newUser._id,
                 email: newUser.email

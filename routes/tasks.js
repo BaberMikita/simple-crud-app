@@ -2,13 +2,14 @@
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/Task'); // Импортируем нашу модель из соседней папки
+const authMiddleware = require('../middleware/auth');
 
 // Обрати внимание: мы убрали '/api/tasks' из каждого пути, 
 // потому что мы зададим этот базовый префикс в главном файле.
 // Теперь тут просто '/' или '/:id'
 
 // 1. ЧТЕНИЕ ВСЕХ ЗАДАЧ (GET)
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
     try {
         const tasks = await Task.find();
         res.status(200).json(tasks);
@@ -18,7 +19,7 @@ router.get('/', async (req, res) => {
 });
 
 // 2. СОЗДАНИЕ (POST)
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
     try {
         const newTask = await Task.create({
             title: req.body.title,
@@ -38,7 +39,7 @@ router.post('/', async (req, res) => {
 });
 
 // 3. ОБНОВЛЕНИЕ (PATCH)
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', authMiddleware, async (req, res) => {
     try {
         const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!updatedTask) return res.status(404).json({ error: "Задача не найдена" });
@@ -49,7 +50,7 @@ router.patch('/:id', async (req, res) => {
 });
 
 // 4. УДАЛЕНИЕ (DELETE)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
     try {
         const deletedTask = await Task.findByIdAndDelete(req.params.id);
         if (!deletedTask) return res.status(404).json({ error: "Задача не найдена" });
