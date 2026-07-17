@@ -11,7 +11,7 @@ const authMiddleware = require('../middleware/auth');
 // 1. ЧТЕНИЕ ВСЕХ ЗАДАЧ (GET)
 router.get('/', authMiddleware, async (req, res) => {
     try {
-        const tasks = await Task.find();
+        const tasks = await Task.find({ user: req.user.userId });
         res.status(200).json(tasks);
     } catch (error) {
         res.status(500).json({ error: "Не удалось получить список задач" });
@@ -23,7 +23,8 @@ router.post('/', authMiddleware, async (req, res) => {
     try {
         const newTask = await Task.create({
             title: req.body.title,
-            isCompleted: req.body.isCompleted
+            isCompleted: req.body.isCompleted,
+            user: req.user.userId
         });
         res.status(201).json(newTask);
     } catch (error) {
@@ -41,8 +42,12 @@ router.post('/', authMiddleware, async (req, res) => {
 // 3. ОБНОВЛЕНИЕ (PATCH)
 router.patch('/:id', authMiddleware, async (req, res) => {
     try {
-        const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!updatedTask) return res.status(404).json({ error: "Задача не найдена" });
+        const updatedTask = await Task.findOneAndUpdate(
+            { _id: req.params.id, user: req.user.userId }, // проверяем и ID задачи, и владельца
+            req.body,
+            { new: true }
+        );
+        if (!updatedTask) return res.status(404).json({ error: "Задача не найдена или нет доступа" });
         res.status(200).json(updatedTask);
     } catch (error) {
         res.status(500).json({ error: "Ошибка при обновлении" });
@@ -52,8 +57,10 @@ router.patch('/:id', authMiddleware, async (req, res) => {
 // 4. УДАЛЕНИЕ (DELETE)
 router.delete('/:id', authMiddleware, async (req, res) => {
     try {
-        const deletedTask = await Task.findByIdAndDelete(req.params.id);
-        if (!deletedTask) return res.status(404).json({ error: "Задача не найдена" });
+        const deletedTask = await Task.findOneAndDelete(
+            { _id: req.params.id, user: req.user.userId } // проверяем и ID задачи, и владельца
+        );
+        if (!deletedTask) return res.status(404).json({ error: "Задача не найдена или нет доступа" });
         res.status(200).json({ message: "Задача успешно удалена" });
     } catch (error) {
         res.status(500).json({ error: "Ошибка при удалении" });

@@ -15,7 +15,13 @@ const taskSchema = new mongoose.Schema({
             message: 'Прокрастинация запрещена! Нельзя использовать слова "завтра", "потом" и т.д.'
         }
     },
-    isCompleted: { type: Boolean, default: false }
+    isCompleted: { type: Boolean, default: false },
+    user: {
+        type: mongoose.Schema.Types.ObjectId, // специальный тип данных MongoDB (ID)
+        ref: 'User',                          // этот ID ссылается на модель User
+        required: true                        // запрещаем создавать задачи без владельца
+    },
+    date: { type: String, default: Date.now(), required: true }, // дата создания
 }, { timestamps: true });
 
 // Хук для большой буквы
