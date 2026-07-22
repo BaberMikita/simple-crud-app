@@ -9,9 +9,19 @@ const authMiddleware = require('../middleware/auth');
 // Теперь тут просто '/' или '/:id'
 
 // 1. ЧТЕНИЕ ВСЕХ ЗАДАЧ (GET)
+// 1. GET: Получить ТОЛЬКО СВОИ задачи (с фильтром по дате)
 router.get('/', authMiddleware, async (req, res) => {
     try {
-        const tasks = await Task.find({ user: req.user.userId });
+        // Базовый фильтр - всегда ищем только задачи текущего юзера
+        const filter = { user: req.user.userId };
+
+        // Если в URL есть параметр date (например /api/tasks?date=2026-07-22)
+        if (req.query.date) {
+            filter.date = req.query.date; // Добавляем дату в фильтр
+        }
+
+        // Ищем в базе по нашему собранному фильтру
+        const tasks = await Task.find(filter).sort({ createdAt: -1 });
         res.status(200).json(tasks);
     } catch (error) {
         res.status(500).json({ error: "Не удалось получить список задач" });
